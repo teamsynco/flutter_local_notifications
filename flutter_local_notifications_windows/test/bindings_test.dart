@@ -13,8 +13,7 @@ const Map<String, String> bindings = <String, String>{
 };
 
 void main() => group('Bindings', () {
-      final FlutterLocalNotificationsWindows plugin =
-          FlutterLocalNotificationsWindows();
+      final FlutterLocalNotificationsWindows plugin = FlutterLocalNotificationsWindows();
       setUpAll(() => plugin.initialize(settings));
       tearDownAll(() async {
         await plugin.cancelAll();
@@ -22,22 +21,20 @@ void main() => group('Bindings', () {
       });
 
       test('work in simple cases', () async {
-        await plugin.show(500, '{title}', '{body}');
-        final NotificationUpdateResult result =
-            await plugin.updateBindings(id: 500, bindings: bindings);
+        await plugin.show('500', '{title}', '{body}');
+        final NotificationUpdateResult result = await plugin.updateBindings(id: 500, bindings: bindings);
         expect(result, NotificationUpdateResult.success);
       });
 
       test('fail when ID is not found in simple cases', () async {
-        await plugin.show(501, '{title}', '{body}');
-        final NotificationUpdateResult result =
-            await plugin.updateBindings(id: 599, bindings: bindings);
+        await plugin.show('501', '{title}', '{body}');
+        final NotificationUpdateResult result = await plugin.updateBindings(id: 599, bindings: bindings);
         expect(result, NotificationUpdateResult.notFound);
       });
 
       test('are included in show()', () async {
         await plugin.show(
-          502,
+          '502',
           '{title}',
           '{body}',
           details: const WindowsNotificationDetails(bindings: bindings),
@@ -46,13 +43,11 @@ void main() => group('Bindings', () {
 
       test('fail when notification has been cancelled', () async {
         await Future<void>.delayed(const Duration(milliseconds: 200));
-        await plugin.show(503, '{title}', '{body}');
-        final NotificationUpdateResult result =
-            await plugin.updateBindings(id: 503, bindings: bindings);
+        await plugin.show('503', '{title}', '{body}');
+        final NotificationUpdateResult result = await plugin.updateBindings(id: 503, bindings: bindings);
         expect(result, NotificationUpdateResult.success);
         await plugin.cancelAll();
-        final NotificationUpdateResult result2 =
-            await plugin.updateBindings(id: 503, bindings: bindings);
+        final NotificationUpdateResult result2 = await plugin.updateBindings(id: 503, bindings: bindings);
         expect(result2, NotificationUpdateResult.notFound);
       });
     });

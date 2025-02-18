@@ -9,25 +9,20 @@ import 'package:flutter_local_notifications_platform_interface/flutter_local_not
 void callbackDispatcher() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const EventChannel backgroundChannel =
-      EventChannel('dexterous.com/flutter/local_notifications/actions');
+  const EventChannel backgroundChannel = EventChannel('dexterous.com/flutter/local_notifications/actions');
 
-  const MethodChannel channel =
-      MethodChannel('dexterous.com/flutter/local_notifications');
+  const MethodChannel channel = MethodChannel('dexterous.com/flutter/local_notifications');
 
   channel.invokeMethod<int>('getCallbackHandle').then((int? handle) {
-    final DidReceiveBackgroundNotificationResponseCallback? callback =
-        handle == null
-            ? null
-            : PluginUtilities.getCallbackFromHandle(
-                    CallbackHandle.fromRawHandle(handle))
-                as DidReceiveBackgroundNotificationResponseCallback?;
+    final DidReceiveBackgroundNotificationResponseCallback? callback = handle == null
+        ? null
+        : PluginUtilities.getCallbackFromHandle(CallbackHandle.fromRawHandle(handle))
+            as DidReceiveBackgroundNotificationResponseCallback?;
 
     backgroundChannel
         .receiveBroadcastStream()
         .map<Map<dynamic, dynamic>>((dynamic event) => event)
-        .map<Map<String, dynamic>>(
-            (Map<dynamic, dynamic> event) => Map.castFrom(event))
+        .map<Map<String, dynamic>>((Map<dynamic, dynamic> event) => Map.castFrom(event))
         .listen((Map<String, dynamic> event) {
       final Object notificationId = event['notificationId'];
       final int id;
@@ -39,12 +34,11 @@ void callbackDispatcher() {
         id = -1;
       }
       callback?.call(NotificationResponse(
-        id: id,
+        id: id.toString(),
         actionId: event['actionId'],
         input: event['input'],
         payload: event['payload'],
-        notificationResponseType:
-            NotificationResponseType.selectedNotificationAction,
+        notificationResponseType: NotificationResponseType.selectedNotificationAction,
       ));
     });
   });

@@ -27,30 +27,21 @@ import 'platform_specifics/darwin/notification_enabled_options.dart';
 import 'types.dart';
 import 'tz_datetime_mapper.dart';
 
-const MethodChannel _channel =
-    MethodChannel('dexterous.com/flutter/local_notifications');
+const MethodChannel _channel = MethodChannel('dexterous.com/flutter/local_notifications');
 
 /// An implementation of a local notifications platform using method channels.
-class MethodChannelFlutterLocalNotificationsPlugin
-    extends FlutterLocalNotificationsPlatform {
+class MethodChannelFlutterLocalNotificationsPlugin extends FlutterLocalNotificationsPlatform {
   @override
-  Future<void> cancel(int id) {
-    validateId(id);
-    return _channel.invokeMethod('cancel', id);
-  }
+  Future<void> cancel(String id) => _channel.invokeMethod('cancel', id);
 
   @override
   Future<void> cancelAll() => _channel.invokeMethod('cancelAll');
 
   @override
-  Future<NotificationAppLaunchDetails?>
-      getNotificationAppLaunchDetails() async {
-    final Map<dynamic, dynamic>? result =
-        await _channel.invokeMethod('getNotificationAppLaunchDetails');
+  Future<NotificationAppLaunchDetails?> getNotificationAppLaunchDetails() async {
+    final Map<dynamic, dynamic>? result = await _channel.invokeMethod('getNotificationAppLaunchDetails');
     final Map<dynamic, dynamic>? notificationResponse =
-        result != null && result.containsKey('notificationResponse')
-            ? result['notificationResponse']
-            : null;
+        result != null && result.containsKey('notificationResponse') ? result['notificationResponse'] : null;
     return result == null
         ? null
         : NotificationAppLaunchDetails(
@@ -61,11 +52,9 @@ class MethodChannelFlutterLocalNotificationsPlugin
                     id: notificationResponse['notificationId'],
                     actionId: notificationResponse['actionId'],
                     input: notificationResponse['input'],
-                    notificationResponseType: NotificationResponseType.values[
-                        notificationResponse['notificationResponseType']],
-                    payload: notificationResponse.containsKey('payload')
-                        ? notificationResponse['payload']
-                        : null,
+                    notificationResponseType:
+                        NotificationResponseType.values[notificationResponse['notificationResponseType']],
+                    payload: notificationResponse.containsKey('payload') ? notificationResponse['payload'] : null,
                     data: Map<String, dynamic>.from(
                       notificationResponse['data'] ?? <String, dynamic>{},
                     ),
@@ -79,16 +68,14 @@ class MethodChannelFlutterLocalNotificationsPlugin
         await _channel.invokeListMethod('pendingNotificationRequests');
     return pendingNotifications
             // ignore: always_specify_types
-            ?.map((p) => PendingNotificationRequest(
-                p['id'], p['title'], p['body'], p['payload']))
+            ?.map((p) => PendingNotificationRequest(p['id'], p['title'], p['body'], p['payload']))
             .toList() ??
         <PendingNotificationRequest>[];
   }
 
   @override
   Future<List<ActiveNotification>> getActiveNotifications() async {
-    final List<Map<dynamic, dynamic>>? activeNotifications =
-        await _channel.invokeListMethod('getActiveNotifications');
+    final List<Map<dynamic, dynamic>>? activeNotifications = await _channel.invokeListMethod('getActiveNotifications');
     return activeNotifications
             // ignore: always_specify_types
             ?.map((p) => ActiveNotification(
@@ -107,12 +94,10 @@ class MethodChannelFlutterLocalNotificationsPlugin
 }
 
 /// Android implementation of the local notifications plugin.
-class AndroidFlutterLocalNotificationsPlugin
-    extends MethodChannelFlutterLocalNotificationsPlugin {
+class AndroidFlutterLocalNotificationsPlugin extends MethodChannelFlutterLocalNotificationsPlugin {
   /// Registers this implementation as the plugin instance.
   static void registerWith() {
-    FlutterLocalNotificationsPlatform.instance =
-        AndroidFlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlatform.instance = AndroidFlutterLocalNotificationsPlugin();
   }
 
   DidReceiveNotificationResponseCallback? _onDidReceiveNotificationResponse;
@@ -136,16 +121,14 @@ class AndroidFlutterLocalNotificationsPlugin
   Future<bool> initialize(
     AndroidInitializationSettings initializationSettings, {
     DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
-    DidReceiveBackgroundNotificationResponseCallback?
-        onDidReceiveBackgroundNotificationResponse,
+    DidReceiveBackgroundNotificationResponseCallback? onDidReceiveBackgroundNotificationResponse,
   }) async {
     _onDidReceiveNotificationResponse = onDidReceiveNotificationResponse;
     _channel.setMethodCallHandler(_handleMethod);
 
     final Map<String, Object> arguments = initializationSettings.toMap();
 
-    _evaluateBackgroundNotificationCallback(
-        onDidReceiveBackgroundNotificationResponse, arguments);
+    _evaluateBackgroundNotificationCallback(onDidReceiveBackgroundNotificationResponse, arguments);
 
     return await _channel.invokeMethod('initialize', arguments);
   }
@@ -159,8 +142,7 @@ class AndroidFlutterLocalNotificationsPlugin
   /// applications meeting this criteria that run on Android 14 or higher will
   /// require the user to grant permission. See [here](https://developer.android.com/about/versions/14/changes/schedule-exact-alarms)
   /// for official Android documentation.
-  Future<bool?> requestExactAlarmsPermission() async =>
-      _channel.invokeMethod<bool>('requestExactAlarmsPermission');
+  Future<bool?> requestExactAlarmsPermission() async => _channel.invokeMethod<bool>('requestExactAlarmsPermission');
 
   /// Requests the permission to send/use full-screen intents.
   ///
@@ -185,8 +167,7 @@ class AndroidFlutterLocalNotificationsPlugin
   /// See also:
   ///
   ///  * https://developer.android.com/about/versions/13/changes/notification-permission
-  Future<bool?> requestNotificationsPermission() async =>
-      _channel.invokeMethod<bool>('requestNotificationsPermission');
+  Future<bool?> requestNotificationsPermission() async => _channel.invokeMethod<bool>('requestNotificationsPermission');
 
   /// Schedules a notification to be shown at the specified date and time
   /// relative to a specific time zone.
@@ -198,7 +179,7 @@ class AndroidFlutterLocalNotificationsPlugin
   /// app's `AndroidManifest.xml` file. Please see check the readme for further
   /// details.
   Future<void> zonedSchedule(
-    int id,
+    String id,
     String? title,
     String? body,
     TZDateTime scheduledDate,
@@ -207,21 +188,20 @@ class AndroidFlutterLocalNotificationsPlugin
     String? payload,
     DateTimeComponents? matchDateTimeComponents,
   }) async {
-    validateId(id);
+    final int intId = int.parse(id);
+    validateId(intId);
     validateDateIsInTheFuture(scheduledDate, matchDateTimeComponents);
 
     await _channel.invokeMethod(
       'zonedSchedule',
       <String, Object?>{
-        'id': id,
+        'id': intId,
         'title': title,
         'body': body,
-        'platformSpecifics':
-            _buildPlatformSpecifics(notificationDetails, scheduleMode),
+        'platformSpecifics': _buildPlatformSpecifics(notificationDetails, scheduleMode),
         'payload': payload ?? '',
         ...scheduledDate.toMap(),
-        if (matchDateTimeComponents != null)
-          'matchDateTimeComponents': matchDateTimeComponents.index
+        if (matchDateTimeComponents != null) 'matchDateTimeComponents': matchDateTimeComponents.index
       },
     );
   }
@@ -275,13 +255,14 @@ class AndroidFlutterLocalNotificationsPlugin
   /// Note that `foregroundServiceType` (the parameter in this method)
   /// must be a subset of the `android:foregroundServiceType`
   /// defined in your `AndroidManifest.xml` (the one from the section above)!
-  Future<void> startForegroundService(int id, String? title, String? body,
+  Future<void> startForegroundService(String id, String? title, String? body,
       {AndroidNotificationDetails? notificationDetails,
       String? payload,
       AndroidServiceStartType startType = AndroidServiceStartType.startSticky,
       Set<AndroidServiceForegroundType>? foregroundServiceTypes}) {
-    validateId(id);
-    if (id == 0) {
+    final int intId = int.parse(id);
+    validateId(intId);
+    if (intId == 0) {
       throw ArgumentError.value(id, 'id',
           'The id of a notification used for an Android foreground service must not be 0!'); // ignore: lines_longer_than_80_chars
     }
@@ -291,16 +272,14 @@ class AndroidFlutterLocalNotificationsPlugin
     }
     return _channel.invokeMethod('startForegroundService', <String, Object?>{
       'notificationData': <String, Object?>{
-        'id': id,
+        'id': intId,
         'title': title,
         'body': body,
         'payload': payload ?? '',
         'platformSpecifics': notificationDetails?.toMap(),
       },
       'startType': startType.index,
-      'foregroundServiceTypes': foregroundServiceTypes
-          ?.map((AndroidServiceForegroundType type) => type.value)
-          .toList()
+      'foregroundServiceTypes': foregroundServiceTypes?.map((AndroidServiceForegroundType type) => type.value).toList()
     });
   }
 
@@ -312,22 +291,22 @@ class AndroidFlutterLocalNotificationsPlugin
   /// It is sufficient to call this method once to stop the
   /// foreground service, even if [startForegroundService] was called
   /// multiple times.
-  Future<void> stopForegroundService() =>
-      _channel.invokeMethod('stopForegroundService');
+  Future<void> stopForegroundService() => _channel.invokeMethod('stopForegroundService');
 
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     AndroidNotificationDetails? notificationDetails,
     String? payload,
   }) {
-    validateId(id);
+    final int intId = int.parse(id);
+    validateId(intId);
     return _channel.invokeMethod(
       'show',
       <String, Object?>{
-        'id': id,
+        'id': intId,
         'title': title,
         'body': body,
         'payload': payload ?? '',
@@ -347,7 +326,7 @@ class AndroidFlutterLocalNotificationsPlugin
   /// details.
   @override
   Future<void> periodicallyShow(
-    int id,
+    String id,
     String? title,
     String? body,
     RepeatInterval repeatInterval, {
@@ -355,22 +334,22 @@ class AndroidFlutterLocalNotificationsPlugin
     String? payload,
     AndroidScheduleMode scheduleMode = AndroidScheduleMode.exact,
   }) async {
-    validateId(id);
+    final int intId = int.parse(id);
+    validateId(intId);
     await _channel.invokeMethod('periodicallyShow', <String, Object?>{
-      'id': id,
+      'id': intId,
       'title': title,
       'body': body,
       'calledAt': clock.now().millisecondsSinceEpoch,
       'repeatInterval': repeatInterval.index,
-      'platformSpecifics':
-          _buildPlatformSpecifics(notificationDetails, scheduleMode),
+      'platformSpecifics': _buildPlatformSpecifics(notificationDetails, scheduleMode),
       'payload': payload ?? '',
     });
   }
 
   @override
   Future<void> periodicallyShowWithDuration(
-    int id,
+    String id,
     String? title,
     String? body,
     Duration repeatDurationInterval, {
@@ -378,17 +357,16 @@ class AndroidFlutterLocalNotificationsPlugin
     String? payload,
     AndroidScheduleMode scheduleMode = AndroidScheduleMode.exact,
   }) async {
-    validateId(id);
+    final int intId = int.parse(id);
+    validateId(intId);
     validateRepeatDurationInterval(repeatDurationInterval);
-    await _channel
-        .invokeMethod('periodicallyShowWithDuration', <String, Object?>{
-      'id': id,
+    await _channel.invokeMethod('periodicallyShowWithDuration', <String, Object?>{
+      'id': intId,
       'title': title,
       'body': body,
       'calledAt': clock.now().millisecondsSinceEpoch,
       'repeatIntervalMilliseconds': repeatDurationInterval.inMilliseconds,
-      'platformSpecifics':
-          _buildPlatformSpecifics(notificationDetails, scheduleMode),
+      'platformSpecifics': _buildPlatformSpecifics(notificationDetails, scheduleMode),
       'payload': payload ?? '',
     });
   }
@@ -411,11 +389,11 @@ class AndroidFlutterLocalNotificationsPlugin
   /// then the notification that matches both the id and the tag will
   /// be canceled. `tag` has no effect on other platforms.
   @override
-  Future<void> cancel(int id, {String? tag}) async {
-    validateId(id);
-
+  Future<void> cancel(String id, {String? tag}) async {
+    final int intId = int.parse(id);
+    validateId(intId);
     return _channel.invokeMethod('cancel', <String, Object?>{
-      'id': id,
+      'id': intId,
       'tag': tag,
     });
   }
@@ -423,10 +401,8 @@ class AndroidFlutterLocalNotificationsPlugin
   /// Creates a notification channel group.
   ///
   /// This method is only applicable to Android versions 8.0 or newer.
-  Future<void> createNotificationChannelGroup(
-          AndroidNotificationChannelGroup notificationChannelGroup) =>
-      _channel.invokeMethod(
-          'createNotificationChannelGroup', notificationChannelGroup.toMap());
+  Future<void> createNotificationChannelGroup(AndroidNotificationChannelGroup notificationChannelGroup) =>
+      _channel.invokeMethod('createNotificationChannelGroup', notificationChannelGroup.toMap());
 
   /// Deletes the notification channel group with the specified [groupId]
   /// as well as all of the channels belonging to the group.
@@ -438,10 +414,8 @@ class AndroidFlutterLocalNotificationsPlugin
   /// Creates a notification channel.
   ///
   /// This method is only applicable to Android versions 8.0 or newer.
-  Future<void> createNotificationChannel(
-          AndroidNotificationChannel notificationChannel) =>
-      _channel.invokeMethod(
-          'createNotificationChannel', notificationChannel.toMap());
+  Future<void> createNotificationChannel(AndroidNotificationChannel notificationChannel) =>
+      _channel.invokeMethod('createNotificationChannel', notificationChannel.toMap());
 
   /// Deletes the notification channel with the specified [channelId].
   ///
@@ -459,12 +433,14 @@ class AndroidFlutterLocalNotificationsPlugin
   /// Only [DrawableResourceAndroidIcon] and [ContentUriAndroidIcon] are
   /// supported for [AndroidIcon] fields.
   Future<MessagingStyleInformation?> getActiveNotificationMessagingStyle(
-    int id, {
+    String id, {
     String? tag,
   }) async {
-    final Map<dynamic, dynamic>? m = await _channel
-        .invokeMethod('getActiveNotificationMessagingStyle', <String, Object?>{
-      'id': id,
+    final int intId = int.parse(id);
+    validateId(intId);
+    final Map<dynamic, dynamic>? m =
+        await _channel.invokeMethod('getActiveNotificationMessagingStyle', <String, Object?>{
+      'id': intId,
       'tag': tag,
     });
     if (m == null) {
@@ -526,7 +502,7 @@ class AndroidFlutterLocalNotificationsPlugin
     return notificationChannels
         // ignore: always_specify_types
         ?.map((a) => AndroidNotificationChannel(
-              a['id'],
+              a['id'].toString(),
               a['name'],
               description: a['description'],
               groupId: a['groupId'],
@@ -558,20 +534,17 @@ class AndroidFlutterLocalNotificationsPlugin
   /// See also:
   ///
   ///  * https://developer.android.com/about/versions/13/changes/notification-permission
-  Future<bool?> areNotificationsEnabled() async =>
-      await _channel.invokeMethod<bool>('areNotificationsEnabled');
+  Future<bool?> areNotificationsEnabled() async => await _channel.invokeMethod<bool>('areNotificationsEnabled');
 
   /// Returns whether the app can schedule exact notifications.
   Future<bool?> canScheduleExactNotifications() async =>
       await _channel.invokeMethod<bool>('canScheduleExactNotifications');
 
-  AndroidNotificationSound? _getNotificationChannelSound(
-      Map<dynamic, dynamic> channelMap) {
+  AndroidNotificationSound? _getNotificationChannelSound(Map<dynamic, dynamic> channelMap) {
     final int? soundSourceIndex = channelMap['soundSource'];
     AndroidNotificationSound? sound;
     if (soundSourceIndex != null) {
-      if (soundSourceIndex ==
-          AndroidNotificationSoundSource.rawResource.index) {
+      if (soundSourceIndex == AndroidNotificationSoundSource.rawResource.index) {
         sound = RawResourceAndroidNotificationSound(channelMap['sound']);
       } else if (soundSourceIndex == AndroidNotificationSoundSource.uri.index) {
         sound = UriAndroidNotificationSound(channelMap['sound']);
@@ -585,12 +558,11 @@ class AndroidFlutterLocalNotificationsPlugin
       case 'didReceiveNotificationResponse':
         _onDidReceiveNotificationResponse?.call(
           NotificationResponse(
-            id: call.arguments['notificationId'],
+            id: call.arguments['notificationId']?.toString(),
             actionId: call.arguments['actionId'],
             input: call.arguments['input'],
             payload: call.arguments['payload'],
-            notificationResponseType: NotificationResponseType
-                .values[call.arguments['notificationResponseType']],
+            notificationResponseType: NotificationResponseType.values[call.arguments['notificationResponseType']],
           ),
         );
         break;
@@ -601,12 +573,10 @@ class AndroidFlutterLocalNotificationsPlugin
 }
 
 /// iOS implementation of the local notifications plugin.
-class IOSFlutterLocalNotificationsPlugin
-    extends MethodChannelFlutterLocalNotificationsPlugin {
+class IOSFlutterLocalNotificationsPlugin extends MethodChannelFlutterLocalNotificationsPlugin {
   /// Registers this implementation as the plugin instance.
   static void registerWith() {
-    FlutterLocalNotificationsPlatform.instance =
-        IOSFlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlatform.instance = IOSFlutterLocalNotificationsPlugin();
   }
 
   DidReceiveNotificationResponseCallback? _onDidReceiveNotificationResponse;
@@ -641,16 +611,14 @@ class IOSFlutterLocalNotificationsPlugin
   Future<bool?> initialize(
     DarwinInitializationSettings initializationSettings, {
     DidReceiveNotificationResponseCallback? onDidReceiveNotificationResponse,
-    DidReceiveBackgroundNotificationResponseCallback?
-        onDidReceiveBackgroundNotificationResponse,
+    DidReceiveBackgroundNotificationResponseCallback? onDidReceiveBackgroundNotificationResponse,
   }) async {
     _onDidReceiveNotificationResponse = onDidReceiveNotificationResponse;
     _channel.setMethodCallHandler(_handleMethod);
 
     final Map<String, Object> arguments = initializationSettings.toMap();
 
-    _evaluateBackgroundNotificationCallback(
-        onDidReceiveBackgroundNotificationResponse, arguments);
+    _evaluateBackgroundNotificationCallback(onDidReceiveBackgroundNotificationResponse, arguments);
 
     return await _channel.invokeMethod('initialize', arguments);
   }
@@ -696,7 +664,7 @@ class IOSFlutterLocalNotificationsPlugin
   /// Schedules a notification to be shown at the specified time in the
   /// future in a specific time zone.
   Future<void> zonedSchedule(
-    int id,
+    String id,
     String? title,
     String? body,
     TZDateTime scheduledDate,
@@ -704,10 +672,8 @@ class IOSFlutterLocalNotificationsPlugin
     String? payload,
     DateTimeComponents? matchDateTimeComponents,
   }) async {
-    validateId(id);
     validateDateIsInTheFuture(scheduledDate, matchDateTimeComponents);
-    final Map<String, Object?> serializedPlatformSpecifics =
-        notificationDetails?.toMap() ?? <String, Object>{};
+    final Map<String, Object?> serializedPlatformSpecifics = notificationDetails?.toMap() ?? <String, Object>{};
     await _channel.invokeMethod(
         'zonedSchedule',
         <String, Object?>{
@@ -720,42 +686,37 @@ class IOSFlutterLocalNotificationsPlugin
           ..addAll(scheduledDate.toMap())
           ..addAll(matchDateTimeComponents == null
               ? <String, Object>{}
-              : <String, Object>{
-                  'matchDateTimeComponents': matchDateTimeComponents.index
-                }));
+              : <String, Object>{'matchDateTimeComponents': matchDateTimeComponents.index}));
   }
 
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     DarwinNotificationDetails? notificationDetails,
     String? payload,
-  }) {
-    validateId(id);
-    return _channel.invokeMethod(
-      'show',
-      <String, Object?>{
-        'id': id,
-        'title': title,
-        'body': body,
-        'payload': payload ?? '',
-        'platformSpecifics': notificationDetails?.toMap(),
-      },
-    );
-  }
+  }) =>
+      _channel.invokeMethod(
+        'show',
+        <String, Object?>{
+          'id': id,
+          'title': title,
+          'body': body,
+          'payload': payload ?? '',
+          'platformSpecifics': notificationDetails?.toMap(),
+        },
+      );
 
   @override
   Future<void> periodicallyShow(
-    int id,
+    String id,
     String? title,
     String? body,
     RepeatInterval repeatInterval, {
     DarwinNotificationDetails? notificationDetails,
     String? payload,
   }) async {
-    validateId(id);
     await _channel.invokeMethod('periodicallyShow', <String, Object?>{
       'id': id,
       'title': title,
@@ -769,17 +730,15 @@ class IOSFlutterLocalNotificationsPlugin
 
   @override
   Future<void> periodicallyShowWithDuration(
-    int id,
+    String id,
     String? title,
     String? body,
     Duration repeatDurationInterval, {
     DarwinNotificationDetails? notificationDetails,
     String? payload,
   }) async {
-    validateId(id);
     validateRepeatDurationInterval(repeatDurationInterval);
-    await _channel
-        .invokeMethod('periodicallyShowWithDuration', <String, Object?>{
+    await _channel.invokeMethod('periodicallyShowWithDuration', <String, Object?>{
       'id': id,
       'title': title,
       'body': body,
@@ -799,8 +758,7 @@ class IOSFlutterLocalNotificationsPlugin
             actionId: call.arguments['actionId'],
             input: call.arguments['input'],
             payload: call.arguments['payload'],
-            notificationResponseType: NotificationResponseType
-                .values[call.arguments['notificationResponseType']],
+            notificationResponseType: NotificationResponseType.values[call.arguments['notificationResponseType']],
           ),
         );
         break;
@@ -811,12 +769,10 @@ class IOSFlutterLocalNotificationsPlugin
 }
 
 /// macOS implementation of the local notifications plugin.
-class MacOSFlutterLocalNotificationsPlugin
-    extends MethodChannelFlutterLocalNotificationsPlugin {
+class MacOSFlutterLocalNotificationsPlugin extends MethodChannelFlutterLocalNotificationsPlugin {
   /// Registers this implementation as the plugin instance.
   static void registerWith() {
-    FlutterLocalNotificationsPlatform.instance =
-        MacOSFlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlatform.instance = MacOSFlutterLocalNotificationsPlugin();
   }
 
   DidReceiveNotificationResponseCallback? _onDidReceiveNotificationResponse;
@@ -846,8 +802,7 @@ class MacOSFlutterLocalNotificationsPlugin
   }) async {
     _onDidReceiveNotificationResponse = onDidReceiveNotificationResponse;
     _channel.setMethodCallHandler(_handleMethod);
-    return await _channel.invokeMethod(
-        'initialize', initializationSettings.toMap());
+    return await _channel.invokeMethod('initialize', initializationSettings.toMap());
   }
 
   /// Requests the specified permission(s) from user and returns current
@@ -870,9 +825,8 @@ class MacOSFlutterLocalNotificationsPlugin
   /// Returns whether the app can post notifications and what kind of.
   ///
   /// See [NotificationsEnabledOptions] for more info.
-  Future<NotificationsEnabledOptions?> checkPermissions() => _channel
-          .invokeMethod<Map<dynamic, dynamic>>('checkPermissions')
-          .then((Map<dynamic, dynamic>? dict) {
+  Future<NotificationsEnabledOptions?> checkPermissions() =>
+      _channel.invokeMethod<Map<dynamic, dynamic>>('checkPermissions').then((Map<dynamic, dynamic>? dict) {
         if (dict == null) {
           return null;
         }
@@ -890,7 +844,7 @@ class MacOSFlutterLocalNotificationsPlugin
   /// Schedules a notification to be shown at the specified date and time
   /// relative to a specific time zone.
   Future<void> zonedSchedule(
-    int id,
+    String id,
     String? title,
     String? body,
     TZDateTime scheduledDate,
@@ -898,10 +852,8 @@ class MacOSFlutterLocalNotificationsPlugin
     String? payload,
     DateTimeComponents? matchDateTimeComponents,
   }) async {
-    validateId(id);
     validateDateIsInTheFuture(scheduledDate, matchDateTimeComponents);
-    final Map<String, Object?> serializedPlatformSpecifics =
-        notificationDetails?.toMap() ?? <String, Object>{};
+    final Map<String, Object?> serializedPlatformSpecifics = notificationDetails?.toMap() ?? <String, Object>{};
     await _channel.invokeMethod(
         'zonedSchedule',
         <String, Object?>{
@@ -914,42 +866,37 @@ class MacOSFlutterLocalNotificationsPlugin
           ..addAll(scheduledDate.toMap())
           ..addAll(matchDateTimeComponents == null
               ? <String, Object>{}
-              : <String, Object>{
-                  'matchDateTimeComponents': matchDateTimeComponents.index
-                }));
+              : <String, Object>{'matchDateTimeComponents': matchDateTimeComponents.index}));
   }
 
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     DarwinNotificationDetails? notificationDetails,
     String? payload,
-  }) {
-    validateId(id);
-    return _channel.invokeMethod(
-      'show',
-      <String, Object?>{
-        'id': id,
-        'title': title,
-        'body': body,
-        'payload': payload ?? '',
-        'platformSpecifics': notificationDetails?.toMap(),
-      },
-    );
-  }
+  }) =>
+      _channel.invokeMethod(
+        'show',
+        <String, Object?>{
+          'id': id,
+          'title': title,
+          'body': body,
+          'payload': payload ?? '',
+          'platformSpecifics': notificationDetails?.toMap(),
+        },
+      );
 
   @override
   Future<void> periodicallyShow(
-    int id,
+    String id,
     String? title,
     String? body,
     RepeatInterval repeatInterval, {
     DarwinNotificationDetails? notificationDetails,
     String? payload,
   }) async {
-    validateId(id);
     await _channel.invokeMethod('periodicallyShow', <String, Object?>{
       'id': id,
       'title': title,
@@ -963,17 +910,15 @@ class MacOSFlutterLocalNotificationsPlugin
 
   @override
   Future<void> periodicallyShowWithDuration(
-    int id,
+    String id,
     String? title,
     String? body,
     Duration repeatDurationInterval, {
     DarwinNotificationDetails? notificationDetails,
     String? payload,
   }) async {
-    validateId(id);
     validateRepeatDurationInterval(repeatDurationInterval);
-    await _channel
-        .invokeMethod('periodicallyShowWithDuration', <String, Object?>{
+    await _channel.invokeMethod('periodicallyShowWithDuration', <String, Object?>{
       'id': id,
       'title': title,
       'body': body,
@@ -993,8 +938,7 @@ class MacOSFlutterLocalNotificationsPlugin
             actionId: call.arguments['actionId'],
             input: call.arguments['input'],
             payload: call.arguments['payload'],
-            notificationResponseType: NotificationResponseType
-                .values[call.arguments['notificationResponseType']],
+            notificationResponseType: NotificationResponseType.values[call.arguments['notificationResponseType']],
           ),
         );
         break;
@@ -1012,19 +956,17 @@ class MacOSFlutterLocalNotificationsPlugin
 /// This will add a `dispatcher_handle` and `callback_handle` argument to the
 /// [arguments] map when the config is correct.
 void _evaluateBackgroundNotificationCallback(
-  DidReceiveBackgroundNotificationResponseCallback?
-      didReceiveBackgroundNotificationResponseCallback,
+  DidReceiveBackgroundNotificationResponseCallback? didReceiveBackgroundNotificationResponseCallback,
   Map<String, Object> arguments,
 ) {
   if (didReceiveBackgroundNotificationResponseCallback != null) {
-    final CallbackHandle? callback = PluginUtilities.getCallbackHandle(
-        didReceiveBackgroundNotificationResponseCallback);
+    final CallbackHandle? callback =
+        PluginUtilities.getCallbackHandle(didReceiveBackgroundNotificationResponseCallback);
     assert(callback != null, '''
           The backgroundHandler needs to be either a static function or a top
           level function to be accessible as a Flutter entry point.''');
 
-    final CallbackHandle? dispatcher =
-        PluginUtilities.getCallbackHandle(callbackDispatcher);
+    final CallbackHandle? dispatcher = PluginUtilities.getCallbackHandle(callbackDispatcher);
 
     arguments['dispatcher_handle'] = dispatcher!.toRawHandle();
     arguments['callback_handle'] = callback!.toRawHandle();

@@ -8,8 +8,7 @@ export 'package:flutter_local_notifications_platform_interface/flutter_local_not
 
 /// The interface that all implementations of flutter_local_notifications_linux
 /// must implement.
-abstract class FlutterLocalNotificationsPlatformLinux
-    extends FlutterLocalNotificationsPlatform {
+abstract class FlutterLocalNotificationsPlatformLinux extends FlutterLocalNotificationsPlatform {
   /// Initializes the plugin.
   ///
   /// Call this method on application before using the plugin further.
@@ -25,7 +24,7 @@ abstract class FlutterLocalNotificationsPlatformLinux
   /// the app when a notification is tapped on.
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     LinuxNotificationDetails? notificationDetails,

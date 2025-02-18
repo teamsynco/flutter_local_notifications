@@ -624,7 +624,7 @@ public class FlutterLocalNotificationsPlugin
   static Map<String, Object> extractNotificationResponseMap(Intent intent) {
     final int notificationId = intent.getIntExtra(NOTIFICATION_ID, 0);
     final Map<String, Object> notificationResponseMap = new HashMap<>();
-    notificationResponseMap.put(NOTIFICATION_ID, notificationId);
+    notificationResponseMap.put(NOTIFICATION_ID, String.valueOf(notificationId));
     notificationResponseMap.put(NOTIFICATION_TAG, intent.getStringExtra(NOTIFICATION_TAG));
     notificationResponseMap.put(ACTION_ID, intent.getStringExtra(ACTION_ID));
     notificationResponseMap.put(
@@ -1536,7 +1536,7 @@ public class FlutterLocalNotificationsPlugin
 
     for (NotificationDetails scheduledNotification : scheduledNotifications) {
       HashMap<String, Object> pendingNotification = new HashMap<>();
-      pendingNotification.put("id", scheduledNotification.id);
+      pendingNotification.put("id", String.valueOf(scheduledNotification.id));
       pendingNotification.put("title", scheduledNotification.title);
       pendingNotification.put("body", scheduledNotification.body);
       pendingNotification.put("payload", scheduledNotification.payload);
@@ -1558,7 +1558,7 @@ public class FlutterLocalNotificationsPlugin
 
       for (StatusBarNotification activeNotification : activeNotifications) {
         HashMap<String, Object> activeNotificationPayload = new HashMap<>();
-        activeNotificationPayload.put("id", activeNotification.getId());
+        activeNotificationPayload.put("id", String.valueOf(activeNotification.getId()));
         Notification notification = activeNotification.getNotification();
         if (VERSION.SDK_INT >= VERSION_CODES.O) {
           activeNotificationPayload.put("channelId", notification.getChannelId());

@@ -12,8 +12,7 @@ import 'model/notification_details.dart';
 /// flutter_local_notifications will also depend on
 /// flutter_local_notifications_linux, not just at
 /// the pubspec level but the code level.
-class LinuxFlutterLocalNotificationsPlugin
-    extends FlutterLocalNotificationsPlatformLinux {
+class LinuxFlutterLocalNotificationsPlugin extends FlutterLocalNotificationsPlatformLinux {
   /// Errors on attempted instantiation of the stub. It exists only to satisfy
   /// compile-time dependencies, and should never actually be created.
   LinuxFlutterLocalNotificationsPlugin() : assert(false);
@@ -33,7 +32,7 @@ class LinuxFlutterLocalNotificationsPlugin
   /// compile-time dependencies, and should never actually be called.
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     LinuxNotificationDetails? notificationDetails,

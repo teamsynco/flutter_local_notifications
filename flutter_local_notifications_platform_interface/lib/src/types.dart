@@ -16,11 +16,10 @@ enum RepeatInterval {
 /// Details of a pending notification that has not been delivered.
 class PendingNotificationRequest {
   /// Constructs an instance of [PendingNotificationRequest].
-  const PendingNotificationRequest(
-      this.id, this.title, this.body, this.payload);
+  const PendingNotificationRequest(this.id, this.title, this.body, this.payload);
 
   /// The notification's id.
-  final int id;
+  final String id;
 
   /// The notification's title.
   final String? title;
@@ -50,7 +49,7 @@ class ActiveNotification {
   ///
   /// This will be null if the notification was outsided of the plugin's
   /// control e.g. on iOS and via Firebase Cloud Messaging.
-  final int? id;
+  final String? id;
 
   /// The notification's channel id.
   ///
@@ -100,7 +99,7 @@ class NotificationResponse {
   ///
   /// This is nullable as support for this only supported for notifications
   /// created using version 10 or newer of this plugin.
-  final int? id;
+  final String? id;
 
   /// The id of the action that was triggered.
   final String? actionId;

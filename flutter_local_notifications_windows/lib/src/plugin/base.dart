@@ -8,8 +8,7 @@ export 'package:flutter_local_notifications_platform_interface/flutter_local_not
 export 'package:timezone/timezone.dart';
 
 /// The Windows implementation of `package:flutter_local_notifications`.
-abstract class WindowsNotificationsBase
-    extends FlutterLocalNotificationsPlatform {
+abstract class WindowsNotificationsBase extends FlutterLocalNotificationsPlatform {
   /// Initializes the plugin. No other method should be called before this.
   Future<bool> initialize(
     WindowsInitializationSettings settings, {
@@ -30,7 +29,7 @@ abstract class WindowsNotificationsBase
 
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     String? payload,

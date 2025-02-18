@@ -17,26 +17,23 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
   void dispose() {}
 
   @override
-  Future<void> cancel(int id) async {}
+  Future<void> cancel(String id) async {}
 
   @override
   Future<void> cancelAll() async {}
 
   @override
-  Future<List<ActiveNotification>> getActiveNotifications() async =>
-      <ActiveNotification>[];
+  Future<List<ActiveNotification>> getActiveNotifications() async => <ActiveNotification>[];
 
   @override
-  Future<NotificationAppLaunchDetails?>
-      getNotificationAppLaunchDetails() async => null;
+  Future<NotificationAppLaunchDetails?> getNotificationAppLaunchDetails() async => null;
 
   @override
-  Future<List<PendingNotificationRequest>>
-      pendingNotificationRequests() async => <PendingNotificationRequest>[];
+  Future<List<PendingNotificationRequest>> pendingNotificationRequests() async => <PendingNotificationRequest>[];
 
   @override
   Future<void> periodicallyShow(
-    int id,
+    String id,
     String? title,
     String? body,
     RepeatInterval repeatInterval,
@@ -44,7 +41,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
 
   @override
   Future<void> periodicallyShowWithDuration(
-    int id,
+    String id,
     String? title,
     String? body,
     Duration repeatDurationInterval,
@@ -52,7 +49,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
 
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     String? payload,

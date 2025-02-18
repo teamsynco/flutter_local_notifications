@@ -7,11 +7,9 @@ import 'model/notification_details.dart';
 import 'notifications_manager.dart';
 
 /// Linux implementation of the local notifications plugin.
-class LinuxFlutterLocalNotificationsPlugin
-    extends FlutterLocalNotificationsPlatformLinux {
+class LinuxFlutterLocalNotificationsPlugin extends FlutterLocalNotificationsPlatformLinux {
   /// Constructs an instance of [LinuxNotificationDetails].
-  LinuxFlutterLocalNotificationsPlugin()
-      : _manager = LinuxNotificationManager();
+  LinuxFlutterLocalNotificationsPlugin() : _manager = LinuxNotificationManager();
 
   /// Constructs an instance of [LinuxNotificationDetails]
   /// with the give [manager].
@@ -22,8 +20,7 @@ class LinuxFlutterLocalNotificationsPlugin
 
   /// Registers the Linux implementation.
   static void registerWith() {
-    FlutterLocalNotificationsPlatform.instance =
-        LinuxFlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlatform.instance = LinuxFlutterLocalNotificationsPlugin();
   }
 
   final LinuxNotificationManager _manager;
@@ -52,15 +49,16 @@ class LinuxFlutterLocalNotificationsPlugin
   /// the app when a notification is tapped on.
   @override
   Future<void> show(
-    int id,
+    String id,
     String? title,
     String? body, {
     LinuxNotificationDetails? notificationDetails,
     String? payload,
   }) {
-    validateId(id);
+    final int intId = int.parse(id);
+    validateId(intId);
     return _manager.show(
-      id,
+      intId,
       title,
       body,
       details: notificationDetails,
@@ -69,9 +67,10 @@ class LinuxFlutterLocalNotificationsPlugin
   }
 
   @override
-  Future<void> cancel(int id) {
-    validateId(id);
-    return _manager.cancel(id);
+  Future<void> cancel(String id) {
+    final int intId = int.parse(id);
+    validateId(intId);
+    return _manager.cancel(intId);
   }
 
   @override
@@ -81,8 +80,7 @@ class LinuxFlutterLocalNotificationsPlugin
   /// Some functionality may not be implemented by the notification server,
   /// conforming clients should check if it is available before using it.
   @override
-  Future<LinuxServerCapabilities> getCapabilities() =>
-      _manager.getCapabilities();
+  Future<LinuxServerCapabilities> getCapabilities() => _manager.getCapabilities();
 
   /// Returns a [Map] with the specified notification id as the key
   /// and the id, assigned by the system, as the value.

@@ -12,8 +12,7 @@ extension NativeStringMapUtils on NativeStringMap {
   /// Converts this map to a typical Dart map.
   Map<String, String> toMap() => <String, String>{
         for (int index = 0; index < size; index++)
-          entries[index].key.toDartString():
-              entries[index].value.toDartString(),
+          entries[index].key.toDartString(): entries[index].value.toDartString(),
       };
 }
 
@@ -49,8 +48,7 @@ extension MapToNativeMap on Map<String, String> {
     int index = 0;
     for (final MapEntry<String, String> entry in entries) {
       pointer.ref.entries[index].key = entry.key.toNativeUtf8(allocator: arena);
-      pointer.ref.entries[index].value =
-          entry.value.toNativeUtf8(allocator: arena);
+      pointer.ref.entries[index].value = entry.value.toNativeUtf8(allocator: arena);
       index++;
     }
     return pointer.ref;
@@ -60,16 +58,13 @@ extension MapToNativeMap on Map<String, String> {
 /// Helpful methods on native notification details.
 extension NativeNotificationDetailsUtils on Pointer<NativeNotificationDetails> {
   /// Parses this array as a list of [ActiveNotification]s.
-  List<ActiveNotification> asActiveNotifications(int length) =>
-      <ActiveNotification>[
-        for (int index = 0; index < length; index++)
-          ActiveNotification(id: this[index].id),
+  List<ActiveNotification> asActiveNotifications(int length) => <ActiveNotification>[
+        for (int index = 0; index < length; index++) ActiveNotification(id: this[index].id.toString()),
       ];
 
   /// Parses this array os a list of [PendingNotificationRequest]s.
-  List<PendingNotificationRequest> asPendingRequests(int length) =>
-      <PendingNotificationRequest>[
+  List<PendingNotificationRequest> asPendingRequests(int length) => <PendingNotificationRequest>[
         for (int index = 0; index < length; index++)
-          PendingNotificationRequest(this[index].id, null, null, null),
+          PendingNotificationRequest(this[index].id.toString(), null, null, null),
       ];
 }

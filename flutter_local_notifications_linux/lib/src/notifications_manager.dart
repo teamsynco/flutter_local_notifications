@@ -44,8 +44,7 @@ class LinuxNotificationManager {
   final NotificationStorage _storage;
 
   late final LinuxInitializationSettings _initializationSettings;
-  late final DidReceiveNotificationResponseCallback?
-      _onDidReceiveNotificationResponse;
+  late final DidReceiveNotificationResponseCallback? _onDidReceiveNotificationResponse;
   late final LinuxPlatformInfoData _platformData;
 
   bool _initialized = false;
@@ -82,8 +81,7 @@ class LinuxNotificationManager {
     String? payload,
   }) async {
     final LinuxNotificationInfo? prevNotify = await _storage.getById(id);
-    final LinuxNotificationIcon? defaultIcon =
-        _initializationSettings.defaultIcon;
+    final LinuxNotificationIcon? defaultIcon = _initializationSettings.defaultIcon;
 
     final DBusMethodSuccessResponse result = await _dbus.callMethod(
       _DBusInterfaceSpec.destination,
@@ -105,8 +103,7 @@ class LinuxNotificationManager {
         DBusDict.stringVariant(_buildHints(details, _initializationSettings)),
         // expire_timeout
         DBusInt32(
-          details?.timeout.value ??
-              const LinuxNotificationTimeout.systemDefault().value,
+          details?.timeout.value ?? const LinuxNotificationTimeout.systemDefault().value,
         ),
       ],
       replySignature: DBusSignature('u'),
@@ -139,8 +136,7 @@ class LinuxNotificationManager {
     LinuxInitializationSettings initSettings,
   ) {
     final Map<String, DBusValue> hints = <String, DBusValue>{};
-    final LinuxNotificationIcon? icon =
-        details?.icon ?? initSettings.defaultIcon;
+    final LinuxNotificationIcon? icon = details?.icon ?? initSettings.defaultIcon;
     if (icon?.type == LinuxIconType.byteData) {
       final LinuxRawIconData data = icon!.content as LinuxRawIconData;
       hints['image-data'] = DBusStruct(
@@ -155,8 +151,7 @@ class LinuxNotificationManager {
         ],
       );
     }
-    final LinuxNotificationSound? sound =
-        details?.sound ?? initSettings.defaultSound;
+    final LinuxNotificationSound? sound = details?.sound ?? initSettings.defaultSound;
     if (sound != null) {
       switch (sound.type) {
         case LinuxSoundType.assets:
@@ -181,8 +176,7 @@ class LinuxNotificationManager {
     if (details?.resident ?? false) {
       hints['resident'] = const DBusBoolean(true);
     }
-    final bool? suppressSound =
-        details?.suppressSound ?? initSettings.defaultSuppressSound;
+    final bool? suppressSound = details?.suppressSound ?? initSettings.defaultSuppressSound;
     if (suppressSound ?? false) {
       hints['suppress-sound'] = const DBusBoolean(true);
     }
@@ -263,10 +257,8 @@ class LinuxNotificationManager {
       <DBusValue>[],
       replySignature: DBusSignature('as'),
     );
-    final Set<String> capsSet = (result.returnValues[0] as DBusArray)
-        .children
-        .map((DBusValue c) => (c as DBusString).value)
-        .toSet();
+    final Set<String> capsSet =
+        (result.returnValues[0] as DBusArray).children.map((DBusValue c) => (c as DBusString).value).toSet();
 
     final LinuxServerCapabilities capabilities = LinuxServerCapabilities(
       otherCapabilities: const <String>{},
@@ -286,15 +278,14 @@ class LinuxNotificationManager {
 
   /// Returns a [Map] with the specified notification id as the key
   /// and the id, assigned by the system, as the value.
-  Future<Map<int, int>> getSystemIdMap() async =>
-      Map<int, int>.fromEntries(await _storage.getAll().then(
-            (List<LinuxNotificationInfo> list) => list.map(
-              (LinuxNotificationInfo notify) => MapEntry<int, int>(
-                notify.id,
-                notify.systemId,
-              ),
-            ),
-          ));
+  Future<Map<int, int>> getSystemIdMap() async => Map<int, int>.fromEntries(await _storage.getAll().then(
+        (List<LinuxNotificationInfo> list) => list.map(
+          (LinuxNotificationInfo notify) => MapEntry<int, int>(
+            notify.id,
+            notify.systemId,
+          ),
+        ),
+      ));
 
   Future<void> _dbusCancel(int systemId) => _dbus.callMethod(
         _DBusInterfaceSpec.destination,
@@ -334,23 +325,20 @@ class LinuxNotificationManager {
 
         final int systemId = (s.values[0] as DBusUint32).value;
         final String actionKey = (s.values[1] as DBusString).value;
-        final LinuxNotificationInfo? notify =
-            await _storage.getBySystemId(systemId);
+        final LinuxNotificationInfo? notify = await _storage.getBySystemId(systemId);
         if (notify == null) {
           return;
         }
         if (actionKey == _kDefaultActionName) {
           _onDidReceiveNotificationResponse?.call(
             NotificationResponse(
-              id: notify.id,
+              id: notify.id.toString(),
               payload: notify.payload,
-              notificationResponseType:
-                  NotificationResponseType.selectedNotification,
+              notificationResponseType: NotificationResponseType.selectedNotification,
             ),
           );
         } else {
-          final LinuxNotificationActionInfo? actionInfo =
-              notify.actions.firstWhere(
+          final LinuxNotificationActionInfo? actionInfo = notify.actions.firstWhere(
             (LinuxNotificationActionInfo a) => a.key == actionKey,
           );
           if (actionInfo == null) {
@@ -358,11 +346,10 @@ class LinuxNotificationManager {
           }
           _onDidReceiveNotificationResponse?.call(
             NotificationResponse(
-              id: notify.id,
+              id: notify.id.toString(),
               actionId: actionInfo.key,
               payload: notify.payload,
-              notificationResponseType:
-                  NotificationResponseType.selectedNotificationAction,
+              notificationResponseType: NotificationResponseType.selectedNotificationAction,
             ),
           );
         }

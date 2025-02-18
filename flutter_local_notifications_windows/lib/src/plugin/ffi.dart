@@ -14,12 +14,7 @@ void _globalLaunchCallback(NativeLaunchDetails details) {
 }
 
 extension on String {
-  bool get isValidGuid =>
-      length == 36 &&
-      this[8] == '-' &&
-      this[13] == '-' &&
-      this[18] == '-' &&
-      this[23] == '-';
+  bool get isValidGuid => length == 36 && this[8] == '-' && this[13] == '-' && this[18] == '-' && this[23] == '-';
 }
 
 /// The Windows implementation of `package:flutter_local_notifications`.
@@ -29,19 +24,16 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
 
   /// Registers the Windows implementation with Flutter.
   static void registerWith() {
-    FlutterLocalNotificationsPlatform.instance =
-        FlutterLocalNotificationsWindows();
+    FlutterLocalNotificationsPlatform.instance = FlutterLocalNotificationsWindows();
   }
 
   /// The global instance of this plugin. Used in [_globalLaunchCallback].
   static FlutterLocalNotificationsWindows? instance;
 
   /// The FFI generated bindings to the native code.
-  late final NotificationsPluginBindings _bindings =
-      NotificationsPluginBindings(_library);
+  late final NotificationsPluginBindings _bindings = NotificationsPluginBindings(_library);
 
-  final DynamicLibrary _library =
-      DynamicLibrary.open('flutter_local_notifications_windows.dll');
+  final DynamicLibrary _library = DynamicLibrary.open('flutter_local_notifications_windows.dll');
 
   /// A pointer to the C++ handler class.
   late final Pointer<NativePlugin> _plugin;
@@ -79,19 +71,14 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
         }
         instance = this;
         userCallback = onNotificationReceived;
-        final Pointer<Utf8> appName =
-            settings.appName.toNativeUtf8(allocator: arena);
-        final Pointer<Utf8> aumId =
-            settings.appUserModelId.toNativeUtf8(allocator: arena);
+        final Pointer<Utf8> appName = settings.appName.toNativeUtf8(allocator: arena);
+        final Pointer<Utf8> aumId = settings.appUserModelId.toNativeUtf8(allocator: arena);
         final Pointer<Utf8> guid = settings.guid.toNativeUtf8(allocator: arena);
-        final Pointer<Utf8> iconPath =
-            settings.iconPath?.toNativeUtf8(allocator: arena) ?? nullptr;
-        final NativeNotificationCallback callback =
-            NativeCallable<NativeNotificationCallbackFunction>.listener(
+        final Pointer<Utf8> iconPath = settings.iconPath?.toNativeUtf8(allocator: arena) ?? nullptr;
+        final NativeNotificationCallback callback = NativeCallable<NativeNotificationCallbackFunction>.listener(
           _globalLaunchCallback,
         ).nativeFunction;
-        final bool result =
-            _bindings.init(_plugin, appName, aumId, guid, iconPath, callback);
+        final bool result = _bindings.init(_plugin, appName, aumId, guid, iconPath, callback);
         _isReady = result;
         return result;
       });
@@ -124,13 +111,13 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
   }
 
   @override
-  Future<void> cancel(int id) async {
+  Future<void> cancel(String id) async {
     if (!_isReady) {
       throw StateError(
         'Flutter Local Notifications must be initialized before use',
       );
     }
-    _bindings.cancelNotification(_plugin, id);
+    _bindings.cancelNotification(_plugin, int.parse(id));
   }
 
   @override
@@ -144,42 +131,35 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
   }
 
   @override
-  Future<List<ActiveNotification>> getActiveNotifications() async =>
-      using((Arena arena) {
+  Future<List<ActiveNotification>> getActiveNotifications() async => using((Arena arena) {
         if (!_isReady) {
           throw StateError(
             'Flutter Local Notifications must be initialized before use',
           );
         }
         final Pointer<Int> length = arena<Int>();
-        final Pointer<NativeNotificationDetails> array =
-            _bindings.getActiveNotifications(_plugin, length);
-        final List<ActiveNotification> result =
-            array.asActiveNotifications(length.value);
+        final Pointer<NativeNotificationDetails> array = _bindings.getActiveNotifications(_plugin, length);
+        final List<ActiveNotification> result = array.asActiveNotifications(length.value);
         _bindings.freeDetailsArray(array);
         return result;
       });
 
   @override
-  Future<List<PendingNotificationRequest>>
-      pendingNotificationRequests() async => using((Arena arena) {
-            if (!_isReady) {
-              throw StateError(
-                'Flutter Local Notifications must be initialized before use',
-              );
-            }
-            final Pointer<Int> length = arena<Int>();
-            final Pointer<NativeNotificationDetails> array =
-                _bindings.getPendingNotifications(_plugin, length);
-            final List<PendingNotificationRequest> result =
-                array.asPendingRequests(length.value);
-            _bindings.freeDetailsArray(array);
-            return result;
-          });
+  Future<List<PendingNotificationRequest>> pendingNotificationRequests() async => using((Arena arena) {
+        if (!_isReady) {
+          throw StateError(
+            'Flutter Local Notifications must be initialized before use',
+          );
+        }
+        final Pointer<Int> length = arena<Int>();
+        final Pointer<NativeNotificationDetails> array = _bindings.getPendingNotifications(_plugin, length);
+        final List<PendingNotificationRequest> result = array.asPendingRequests(length.value);
+        _bindings.freeDetailsArray(array);
+        return result;
+      });
 
   @override
-  Future<NotificationAppLaunchDetails?>
-      getNotificationAppLaunchDetails() async {
+  Future<NotificationAppLaunchDetails?> getNotificationAppLaunchDetails() async {
     if (!_isReady) {
       throw StateError(
         'Flutter Local Notifications must be initialized before use',
@@ -203,7 +183,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
 
   @override
   Future<void> periodicallyShow(
-    int id,
+    String id,
     String? title,
     String? body,
     RepeatInterval repeatInterval,
@@ -215,7 +195,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
 
   @override
   Future<void> periodicallyShowWithDuration(
-    int id,
+    String id,
     String? title,
     String? body,
     Duration repeatDurationInterval,
@@ -226,7 +206,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
   }
 
   @override
-  Future<void> show(int id, String? title, String? body,
+  Future<void> show(String id, String? title, String? body,
           {String? payload, WindowsNotificationDetails? details}) async =>
       using((Arena arena) {
         if (!_isReady) {
@@ -236,8 +216,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
         }
         final Map<String, String> bindings = <String, String>{
           if (details != null) ...details.bindings,
-          for (final WindowsProgressBar progressBar
-              in details?.progressBars ?? <WindowsProgressBar>[])
+          for (final WindowsProgressBar progressBar in details?.progressBars ?? <WindowsProgressBar>[])
             ...progressBar.data,
         };
         final NativeStringMap nativeMap = bindings.toNativeMap(arena);
@@ -249,7 +228,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
         );
         final bool result = _bindings.showNotification(
           _plugin,
-          id,
+          int.parse(id),
           xml.toNativeUtf8(allocator: arena),
           nativeMap,
         );
@@ -272,8 +251,8 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
             'Flutter Local Notifications must be initialized before use',
           );
         }
-        final bool result = _bindings.showNotification(_plugin, id,
-            xml.toNativeUtf8(allocator: arena), bindings.toNativeMap(arena));
+        final bool result =
+            _bindings.showNotification(_plugin, id, xml.toNativeUtf8(allocator: arena), bindings.toNativeMap(arena));
         if (!result) {
           throw ArgumentError('Flutter Local Notifications: Invalid XML');
         }
@@ -312,8 +291,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
           payload: payload,
           details: details,
         );
-        final int secondsSinceEpoch =
-            scheduledDate.millisecondsSinceEpoch ~/ 1000;
+        final int secondsSinceEpoch = scheduledDate.millisecondsSinceEpoch ~/ 1000;
         _bindings.scheduleNotification(
           _plugin,
           id,
@@ -341,8 +319,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
             ' schedule notifications in the past',
           );
         }
-        final int secondsSinceEpoch =
-            scheduledDate.millisecondsSinceEpoch ~/ 1000;
+        final int secondsSinceEpoch = scheduledDate.millisecondsSinceEpoch ~/ 1000;
         _bindings.scheduleNotification(
           _plugin,
           id,
@@ -362,8 +339,7 @@ class FlutterLocalNotificationsWindows extends WindowsNotificationsBase {
             'Flutter Local Notifications must be initialized before use',
           );
         }
-        final NativeUpdateResult result = _bindings.updateNotification(
-            _plugin, id, bindings.toNativeMap(arena));
+        final NativeUpdateResult result = _bindings.updateNotification(_plugin, id, bindings.toNativeMap(arena));
         return getUpdateResult(result);
       });
 }

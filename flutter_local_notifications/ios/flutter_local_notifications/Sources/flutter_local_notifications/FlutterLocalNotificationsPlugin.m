@@ -86,7 +86,7 @@ NSString *const SCHEDULED_DATE_TIME = @"scheduledDateTimeISO8601";
 NSString *const TIME_ZONE_NAME = @"timeZoneName";
 NSString *const MATCH_DATE_TIME_COMPONENTS = @"matchDateTimeComponents";
 
-NSString *const NOTIFICATION_ID = @"NotificationId";
+NSString *const NOTIFICATION_ID = @"LocalNotificationId";
 NSString *const PAYLOAD = @"payload";
 NSString *const NOTIFICATION_LAUNCHED_APP = @"notificationLaunchedApp";
 NSString *const ACTION_ID = @"actionId";
@@ -203,6 +203,44 @@ static FlutterError *getFlutterError(NSError *error) {
   }
 }
 
+- (NSMutableDictionary<NSString *, NSObject *> *)extractNotificationData:(UNNotificationRequest *)request {
+    NSMutableDictionary<NSString *, NSObject *> *notificationData = [[NSMutableDictionary alloc] init];
+
+    notificationData[ID] = request.identifier;
+    notificationData[TITLE] = request.content.title;
+    notificationData[BODY] = request.content.body;
+
+    NSDictionary *userInfo = request.content.userInfo;
+    id payload = userInfo[PAYLOAD];
+
+    // Extract payload or fallback to stringified userInfo
+    if ([payload isKindOfClass:[NSString class]]) {
+        notificationData[PAYLOAD] = payload;
+    } else if ([payload isKindOfClass:[NSDictionary class]] || [payload isKindOfClass:[NSArray class]]) {
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:payload
+                                                           options:0
+                                                             error:&error];
+        if (!error) {
+            notificationData[PAYLOAD] = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        } else {
+            notificationData[PAYLOAD] = @"{}";
+        }
+    } else if (userInfo != nil && userInfo.count > 0) {
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:userInfo
+                                                           options:0
+                                                             error:&error];
+        if (!error) {
+            notificationData[PAYLOAD] = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        } else {
+            notificationData[PAYLOAD] = @"{}";
+        }
+    }
+
+    return notificationData;
+}
+
 - (void)pendingNotificationRequests:(FlutterResult _Nonnull)result
     API_AVAILABLE(ios(10.0)) {
   UNUserNotificationCenter *center =
@@ -215,18 +253,7 @@ static FlutterError *getFlutterError(NSError *error) {
     for (UNNotificationRequest *request in requests) {
       NSMutableDictionary *pendingNotificationRequest =
           [[NSMutableDictionary alloc] init];
-      pendingNotificationRequest[ID] =
-          request.content.userInfo[NOTIFICATION_ID];
-      if (request.content.title != nil) {
-        pendingNotificationRequest[TITLE] = request.content.title;
-      }
-      if (request.content.body != nil) {
-        pendingNotificationRequest[BODY] = request.content.body;
-      }
-      if (request.content.userInfo[PAYLOAD] != [NSNull null]) {
-        pendingNotificationRequest[PAYLOAD] = request.content.userInfo[PAYLOAD];
-      }
-      [pendingNotificationRequests addObject:pendingNotificationRequest];
+      [pendingNotificationRequests addObject:[self extractNotificationData:request]];
     }
     result(pendingNotificationRequests);
   }];
@@ -313,19 +340,7 @@ static FlutterError *getFlutterError(NSError *error) {
     for (UNNotification *notification in notifications) {
       NSMutableDictionary *activeNotification =
           [[NSMutableDictionary alloc] init];
-      activeNotification[ID] =
-          notification.request.content.userInfo[NOTIFICATION_ID];
-      if (notification.request.content.title != nil) {
-        activeNotification[TITLE] = notification.request.content.title;
-      }
-      if (notification.request.content.body != nil) {
-        activeNotification[BODY] = notification.request.content.body;
-      }
-      if (notification.request.content.userInfo[PAYLOAD] != [NSNull null]) {
-        activeNotification[PAYLOAD] =
-            notification.request.content.userInfo[PAYLOAD];
-      }
-      [activeNotifications addObject:activeNotification];
+      [activeNotifications addObject:[self extractNotificationData:notification.request]];
     }
     result(activeNotifications);
   }];
@@ -515,7 +530,7 @@ static FlutterError *getFlutterError(NSError *error) {
 }
 
 - (NSString *)getIdentifier:(id)arguments {
-  return [arguments[ID] stringValue];
+  return arguments[ID];
 }
 
 - (void)show:(NSDictionary *_Nonnull)arguments
@@ -553,12 +568,12 @@ static FlutterError *getFlutterError(NSError *error) {
                        trigger:trigger];
 }
 
-- (void)cancel:(NSNumber *)id
+- (void)cancel:(NSString *)id
         result:(FlutterResult _Nonnull)result API_AVAILABLE(ios(10.0)) {
   UNUserNotificationCenter *center =
       [UNUserNotificationCenter currentNotificationCenter];
   NSArray *idsToRemove =
-      [[NSArray alloc] initWithObjects:[id stringValue], nil];
+      [[NSArray alloc] initWithObjects:id, nil];
   [center removePendingNotificationRequestsWithIdentifiers:idsToRemove];
   [center removeDeliveredNotificationsWithIdentifiers:idsToRemove];
   result(nil);
@@ -805,7 +820,7 @@ static FlutterError *getFlutterError(NSError *error) {
   return nil;
 }
 
-- (NSDictionary *)buildUserDict:(NSNumber *)id
+- (NSDictionary *)buildUserDict:(NSString *)id
                           title:(NSString *)title
                    presentAlert:(bool)presentAlert
                    presentSound:(bool)presentSound
@@ -854,11 +869,10 @@ static FlutterError *getFlutterError(NSError *error) {
          userInfo[PRESENT_BADGE] && userInfo[PAYLOAD];
 }
 
-- (void)handleSelectNotification:(NSInteger)notificationId
+- (void)handleSelectNotification:(NSString *)notificationId
                          payload:(NSString *)payload {
   NSMutableDictionary *arguments = [[NSMutableDictionary alloc] init];
-  NSNumber *notificationIdNumber = [NSNumber numberWithInteger:notificationId];
-  arguments[@"notificationId"] = notificationIdNumber;
+  arguments[@"notificationId"] = notificationId;
   arguments[PAYLOAD] = payload;
   arguments[NOTIFICATION_RESPONSE_TYPE] = [NSNumber numberWithInteger:0];
   [_channel invokeMethod:@"didReceiveNotificationResponse" arguments:arguments];
@@ -919,12 +933,10 @@ static FlutterError *getFlutterError(NSError *error) {
     (UNNotificationResponse *_Nonnull)response API_AVAILABLE(ios(10.0)) {
   NSMutableDictionary *notitificationResponseDict =
       [[NSMutableDictionary alloc] init];
-  NSInteger notificationId =
-      [response.notification.request.identifier integerValue];
+  NSString *notificationId = response.notification.request.identifier;
   NSString *payload =
       (NSString *)response.notification.request.content.userInfo[PAYLOAD];
-  NSNumber *notificationIdNumber = [NSNumber numberWithInteger:notificationId];
-  notitificationResponseDict[@"notificationId"] = notificationIdNumber;
+  notitificationResponseDict[@"notificationId"] = notificationId;
   notitificationResponseDict[PAYLOAD] = payload;
   if ([response.actionIdentifier
           isEqualToString:UNNotificationDefaultActionIdentifier]) {
@@ -954,8 +966,7 @@ static FlutterError *getFlutterError(NSError *error) {
     return;
   }
 
-  NSInteger notificationId =
-      [response.notification.request.identifier integerValue];
+  NSString *notificationId = response.notification.request.identifier;
   NSString *payload =
       (NSString *)response.notification.request.content.userInfo[PAYLOAD];
 
