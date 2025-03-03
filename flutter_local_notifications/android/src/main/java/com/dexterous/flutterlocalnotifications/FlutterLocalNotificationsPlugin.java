@@ -1571,6 +1571,14 @@ public class FlutterLocalNotificationsPlugin
         activeNotificationPayload.put("body", notification.extras.getCharSequence("android.text"));
         activeNotificationPayload.put(
             "bigText", notification.extras.getCharSequence("android.bigText"));
+        CharSequence[] textLines = notification.extras.getCharSequenceArray("android.textLines");
+        if (textLines != null) {
+          List<String> linesList = new ArrayList<>();
+          for (CharSequence line : textLines) {
+            linesList.add(line.toString());
+          }
+          activeNotificationPayload.put("textLines", linesList); // Add all lines
+        }
         activeNotificationsPayload.add(activeNotificationPayload);
       }
       result.success(activeNotificationsPayload);

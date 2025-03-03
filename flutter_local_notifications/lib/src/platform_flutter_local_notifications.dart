@@ -87,6 +87,7 @@ class MethodChannelFlutterLocalNotificationsPlugin extends FlutterLocalNotificat
                   body: p['body'],
                   payload: p['payload'],
                   bigText: p['bigText'],
+                  textLines: (p['textLines'] as List<dynamic>?)?.cast<String>(),
                 ))
             .toList() ??
         <ActiveNotification>[];

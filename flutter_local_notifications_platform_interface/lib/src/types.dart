@@ -43,6 +43,7 @@ class ActiveNotification {
     this.payload,
     this.tag,
     this.bigText,
+    this.textLines,
   });
 
   /// The notification's id.
@@ -81,6 +82,11 @@ class ActiveNotification {
   ///
   /// Returned only on Android.
   final String? bigText;
+
+  /// The notification's text lines displayed using inbox style information.
+  ///
+  /// Returned only on Android.
+  final List<String>? textLines;
 }
 
 /// Details of a Notification Action that was triggered.
