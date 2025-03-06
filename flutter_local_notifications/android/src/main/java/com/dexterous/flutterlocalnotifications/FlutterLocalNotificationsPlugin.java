@@ -290,6 +290,10 @@ public class FlutterLocalNotificationsPlugin
             .setSilent(BooleanUtils.getValue(notificationDetails.silent))
             .setOnlyAlertOnce(BooleanUtils.getValue(notificationDetails.onlyAlertOnce));
 
+    Bundle payloadBundle = new Bundle();
+    payloadBundle.putString(PAYLOAD, notificationDetails.payload);
+    builder.addExtras(payloadBundle);
+
     if (notificationDetails.actions != null) {
       // Space out request codes by 16 so even with 16 actions they won't clash
       int requestCode = notificationDetails.id * 16;
@@ -1571,6 +1575,9 @@ public class FlutterLocalNotificationsPlugin
         activeNotificationPayload.put("body", notification.extras.getCharSequence("android.text"));
         activeNotificationPayload.put(
             "bigText", notification.extras.getCharSequence("android.bigText"));
+        activeNotificationPayload.put(
+            "payload", notification.extras.getString("payload"));
+
         activeNotificationsPayload.add(activeNotificationPayload);
       }
       result.success(activeNotificationsPayload);
@@ -2028,6 +2035,12 @@ public class FlutterLocalNotificationsPlugin
         msgPayload.put("text", msg.getText());
         msgPayload.put("timestamp", msg.getTimestamp());
         msgPayload.put("person", describePerson(msg.getPerson()));
+        if (msg.getDataUri() != null) {
+          msgPayload.put("dataUri", msg.getDataUri().toString());
+        }
+        if (msg.getDataMimeType() != null) {
+          msgPayload.put("dataMimeType", msg.getDataMimeType());
+        }
         messagesPayload.add(msgPayload);
       }
       stylePayload.put("messages", messagesPayload);
