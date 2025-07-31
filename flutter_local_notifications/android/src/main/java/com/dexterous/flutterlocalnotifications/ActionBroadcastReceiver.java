@@ -53,7 +53,7 @@ public class ActionBroadcastReceiver extends BroadcastReceiver {
         FlutterLocalNotificationsPlugin.extractNotificationResponseMap(intent);
 
     if (intent.getBooleanExtra(FlutterLocalNotificationsPlugin.CANCEL_NOTIFICATION, false)) {
-      int notificationId = (int) action.get(FlutterLocalNotificationsPlugin.NOTIFICATION_ID);
+      int notificationId = Integer.parseInt((String) action.get(FlutterLocalNotificationsPlugin.NOTIFICATION_ID));
       Object tag = action.get(FlutterLocalNotificationsPlugin.NOTIFICATION_TAG);
 
       if (tag instanceof String) {

@@ -1937,7 +1937,7 @@ public class FlutterLocalNotificationsPlugin
       Intent intent, Map<String, Object> notificationResponse) {
     if (intent.getBooleanExtra(FlutterLocalNotificationsPlugin.CANCEL_NOTIFICATION, false)) {
       NotificationManagerCompat.from(applicationContext)
-          .cancel((int) notificationResponse.get(FlutterLocalNotificationsPlugin.NOTIFICATION_ID));
+          .cancel(Integer.parseInt((String) notificationResponse.get(FlutterLocalNotificationsPlugin.NOTIFICATION_ID)));
     }
   }
 
